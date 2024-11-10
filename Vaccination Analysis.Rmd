@@ -1,0 +1,116 @@
+---
+title: "Analysing Vaccination Dataset From NHFS"
+author: "Abhivyakti Mishra"
+date: "2024-11-12"
+output: html_document
+---
+This project was originally made for a policy brief titled "Shot at Survival": How Vaccine Inequality Effects Health Outcomes in India" that I have submitted for my course MPE 184 Development Economics at TERI School of Advanced Studies.
+
+I have explored the data set further to understand the scenario of vaccination uptake in India. This project delves into how vaccine uptakes are distributed among various states and union territories in the country. 
+
+I have used National Family Health Survey Data 4 and National Family Health Survey Data 5 for this analysis. All the data files can be accessed here. 
+
+I have used the following packages for my analysis. 
+```{r warning=FALSE, message=FALSE, paged.print=FALSE}
+#Installing Packages
+library(magrittr)
+library(ggplot2)
+library(ggrepel)
+library(ggpubr)
+library(tidyr)
+```
+
+# According to NFHS 5 More Vaccines Were Recieved in Public Centers in India
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+#load the data set 
+directory <- "C:/Users/mabhi/OneDrive/Desktop/R Work/"
+VaccineStateTotal <- read.csv(paste0(directory,"statetotal.csv"))
+
+#scatterplot of vaccinations received in a private and public health facility 
+VaccineStateTotal %>% ggplot(aes(y=vaccinepublic,x=vaccineprivate,label=states)) +
+  geom_point() +
+  stat_cor(method = "spearman", aes(label = ..r.label..)) + ylab("Vaccines Recieved in Private Centres") +
+  xlab("Vaccines Recieved in Public Centres")+
+  geom_label_repel(aes(fontface = 'bold'),box.padding = unit(0.25, 'lines'),
+                   point.padding = unit(0.5, 'lines'),max.overlaps = 10) 
+
+```
+
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+VaccineStack <- read.csv(paste0(directory, "stack.csv"))
+VaccineStack %>% pivot_longer(cols = -states, names_to = "Institution", values_to = "percentage")%>%
+  ggplot(aes(label = Institution, fill= Institution, 
+                           y= states, x = percentage)) +
+geom_bar(position = "fill", stat = "identity") +   geom_text(aes(label=percentage),  position = position_fill(vjust = 0.5),  color = "black", size = 1.5)
+```
+
+Throughout the country most children in most states and union territories have received vaccines in a public center.
+
+## Negative Relationship between Mother's Education and Administring the Child Vaccine in a Public Center
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+#scatter plot of women literacy and vaccination of the child in a public institution ------
+VaccineStateTotal %>% ggplot(aes(y= women15.49literate,x=vaccinepublic,label=states)) +
+  geom_point() +
+  stat_cor(method = "pearson", aes(label = ..r.label..),label.x=20,label.y=90) + ylab("Literacy Level of the Women") +
+  xlab("Vaccination Rate of the Children in a Public Health Facility")+
+  geom_label_repel(aes(fontface = 'bold'),box.padding = unit(0.25, 'lines'),
+                   point.padding = unit(0.5, 'lines'),max.overlaps = 10) 
+
+```
+
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+#scatter plot of women literacy and vaccination of the child in a private institution ------------
+VaccineStateTotal %>% ggplot(aes(y= women15.49literate,x=vaccineprivate,label=states)) +
+  geom_point() +
+  stat_cor(method = "pearson", aes(label = ..r.label..),label.x=20,label.y=90) + ylab("Literacy Level of the Women") +
+  xlab("Vaccination Rate of the Children in a Private Health Facility")+
+  geom_label_repel(aes(fontface = 'bold'),box.padding = unit(0.25, 'lines'),
+                   point.padding = unit(0.5, 'lines'),max.overlaps = 8) 
+```
+
+
+# Change in Vaccination Uptake from 2016 to 2021
+
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+#barbell chart NFHS 4 and NFHS 5---------
+#load the data set 
+directory <- "C:/Users/mabhi/OneDrive/Desktop/R Work/"
+VaccineArrow <- read.csv(paste0(directory, "vaccinearrow.csv"))
+
+VaccineArrow %>% 
+  pivot_longer(cols = -states, names_to = "NFHS", values_to = "percentage" )%>%
+  ggplot(aes(x = percentage, y= states, color=NFHS)) +
+  geom_line(color="black") + geom_point() 
+
+```
+
+
+
+
+# Number of Various Vaccines Taken
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+#barplot for various vaccines according to NFHS 5 ----------
+average_BCG<-round(mean(VaccineStateTotal$BCG),2)
+average_3_doses_polio<-round(mean(VaccineStateTotal$X3polio),2)
+average_DPT <- round(mean(VaccineStateTotal$DPT),2)
+average_hepb <- round(mean(VaccineStateTotal$hepb),2)
+
+vaccine_average<-data.frame (Protection_Against= c("BCG", "Polio", "DPT", "Hep"),
+                             value=c(average_BCG, average_3_doses_polio, average_DPT, average_hepb)
+)
+
+vaccine_average %>% 
+  ggplot(aes(y=value,x=Protection_Against,fill=Protection_Against)) +
+  geom_col(colour="black",width=0.6,    
+           position=position_dodge(0.6)) + ylab("Percentage") +
+  xlab("Disease against which there is protection") + geom_text(aes(label=value),vjust=-0.2,position = position_dodge(width = 1))
+```
+
+# Conclusion
+I have tried to see how vaccine uptake is distributed in public and private centers in the country and various other factors that effect vaccine uptake in the country. This is an ongoing study where I further wish to analyse how COVID - 19 has changed the vaccine uptake decisions throughout the country and how factors such as government intervention and vaccine acceptance effects health outcomes in the country.  
